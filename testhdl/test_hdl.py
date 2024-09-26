@@ -15,3 +15,4 @@ class TestHDL:
         log.info("Hello world!")
         log.warning("This is a warning")
         log.error("This is an error")
+        log.critical("This is a critical error")
