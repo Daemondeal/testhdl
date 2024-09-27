@@ -1,6 +1,7 @@
 import logging
 import logging.config
 
+# fmt: off
 logging_config = {
     "version": 1,
     "disable_existing_loggers": False,
@@ -27,6 +28,8 @@ logging_config = {
         "": {"level": "DEBUG", "handlers": ["stdout"]}
     },
 }
+# fmt: on
+
 
 # Taken from https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
 class CustomColorFormatter(logging.Formatter):

@@ -1,3 +1,19 @@
 site_name: TestHDL
+
+repo_url: https://github.com/Daemondeal/testhdl
+
 theme:
-  name: readthedocs
+  name: material
+  palette:
+    scheme: slate
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+            separate_signature: true
+            show_signature_annotations: true
+            docstring_style: sphinx

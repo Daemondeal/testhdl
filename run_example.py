@@ -1,5 +1,4 @@
 from testhdl import TestHDL
 
-th = TestHDL.from_argv()
+th = TestHDL.from_args()
 
-th.test()
