@@ -19,7 +19,7 @@ class TestConfigSeparateEntities(TestConfigBase):
         return test.name
 
     def get_arguments(self, test: TestCase) -> List[str]:
-        return []
+        return test.runtime_args
 
 
 class TestConfigUVM(TestConfigBase):

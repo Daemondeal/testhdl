@@ -10,6 +10,13 @@ class HardwareLanguage(Enum):
     SYSTEMVERILOG = "systemverilog"
 
 
+class RunAction(Enum):
+    LIST_TESTS = 0
+    COMPILE_ONLY = 1
+    RUN_SINGLE_TEST = 2
+    RUN_ALL = 3
+
+
 @dataclass
 class SourceList:
     paths: List[Path]
