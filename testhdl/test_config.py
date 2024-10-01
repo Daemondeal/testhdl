@@ -32,4 +32,4 @@ class TestConfigUVM(TestConfigBase):
         return self.top_entity
 
     def get_arguments(self, test: TestCase) -> List[str]:
-        return [f"+UVM_TEST={test}"]
+        return [f"+UVM_TEST={test}"] + test.runtime_args
