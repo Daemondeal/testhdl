@@ -1,7 +1,13 @@
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 
-def run_program(args: List[str], cwd: Path, stdout_out: Path, echo: bool = False):
+def run_program(
+    args: List[str], cwd: Path, stdout_out: Optional[Path] = None, echo: bool = False
+):
     print(f"cd {cwd}")
-    print(" ".join(args) + f" > {stdout_out.as_posix()}")
+
+    if stdout_out is None:
+        print(" ".join(args))
+    else:
+        print(" ".join(args) + f" > {stdout_out.as_posix()}")

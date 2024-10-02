@@ -6,12 +6,12 @@ import logging
 import argparse
 
 from testhdl.logging import setup_logging
-from testhdl.models import RunAction, TestCase, RunConfig
+from testhdl.models import RunAction, TestCase
 from testhdl.errors import ValidationError
-from testhdl.simulator_base import SimulatorBase
 from testhdl.simulator_questasim import SimulatorQuestaSim
 from testhdl.source_library import SourceLibrary
 from testhdl.runner import Runner
+from testhdl.run_config import RunConfig
 from testhdl.test_config import (
     TestConfigBase,
     TestConfigUVM,
@@ -32,7 +32,7 @@ class TestHDL:
     default_seed: Optional[int]
 
     test_config: TestConfigBase
-    simulator: Optional[SimulatorBase]
+    simulator: str
     libraries: List[SourceLibrary]
     tests: List[TestCase]
 
@@ -52,8 +52,12 @@ class TestHDL:
         self.tests = []
         self.test_config = TestConfigSeparateEntities()
         self.resolution = "100ps"
-        self.simulator = None
+        self.simulator = ""
         self.default_seed = None
+
+        self.compile_args = []
+        self.runtime_args = []
+        self.runtime_run_args = []
 
         self.flags = [flag.lower() for flag in args.flag]
 
@@ -170,7 +174,7 @@ class TestHDL:
             log.critical("Invalid simulator %s", simulator_name)
             exit(-1)
 
-        self.simulator = SUPPORTED_SIMULATORS[simulator_name]()
+        self.simulator = simulator_name
 
     def add_test(self, test_name: str, *, runtime_args: Optional[List[str]] = None):
         """Add a test to the tests list.
@@ -187,7 +191,7 @@ class TestHDL:
         if len(self.tests) <= 0:
             raise ValidationError("No tests defined.")
 
-        if self.simulator is None:
+        if self.simulator == "":
             raise ValidationError(
                 f"No simulator chosen. Supported simulators are: \n- {'\n- '.join(SUPPORTED_SIMULATORS.keys())}"
             )
@@ -231,7 +235,13 @@ class TestHDL:
         else:
             seed = self.args.seed
 
-        assert self.simulator is not None
+        simulator = SUPPORTED_SIMULATORS[self.simulator](self.workdir)
+
+        try:
+            simulator.validate()
+        except ValidationError as e:
+            log.critical("Simulator error: %s", e)
+            return
 
         config = RunConfig(
             path_workdir=self.workdir,
@@ -245,10 +255,10 @@ class TestHDL:
             runtime_run_args=self.runtime_run_args,
             log_all_waves=False,
             libraries=self.libraries,
-            simulator=self.simulator,
+            simulator=simulator,
             test_config=self.test_config,
         )
 
-        runner = Runner()
+        runner = Runner(config)
 
-        runner.run(action, config)
+        runner.run(action)
