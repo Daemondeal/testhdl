@@ -5,7 +5,7 @@ from typing import List, Optional
 def run_program(
     args: List[str], cwd: Path, stdout_out: Optional[Path] = None, echo: bool = False
 ):
-    print(f"cd {cwd}")
+    print(f"cd {cwd} && ", end="")
 
     if stdout_out is None:
         print(" ".join(args))
