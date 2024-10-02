@@ -6,11 +6,12 @@ import logging
 import argparse
 
 from testhdl.logging import setup_logging
-from testhdl.models import RunAction, TestCase
+from testhdl.models import RunAction, TestCase, RunConfig
 from testhdl.errors import ValidationError
 from testhdl.simulator_base import SimulatorBase
 from testhdl.simulator_questasim import SimulatorQuestaSim
 from testhdl.source_library import SourceLibrary
+from testhdl.runner import Runner
 from testhdl.test_config import (
     TestConfigBase,
     TestConfigUVM,
@@ -29,11 +30,17 @@ class TestHDL:
     workdir: Path
     logsdir: Path
     default_seed: Optional[int]
+
     test_config: TestConfigBase
     simulator: Optional[SimulatorBase]
-
     libraries: List[SourceLibrary]
     tests: List[TestCase]
+
+    compile_args: List[str]
+    runtime_args: List[str]
+    runtime_run_args: List[str]
+
+    flags: List[str]
 
     resolution: str
 
@@ -47,6 +54,8 @@ class TestHDL:
         self.resolution = "100ps"
         self.simulator = None
         self.default_seed = None
+
+        self.flags = [flag.lower() for flag in args.flag]
 
     @staticmethod
     def from_args(logging_enabled: bool = True):
@@ -97,6 +106,21 @@ class TestHDL:
         args = parser.parse_args()
 
         return TestHDL(args)
+
+    def is_flag_enabled(self, flag: str) -> bool:
+        """Check if a compile time flag is enabled or not.
+        Changing flags in the CLI will force a recompilation
+
+        :param flag: the flag to check
+        """
+        return flag.lower() in self.flags
+
+    def set_resolution(self, resolution: str):
+        """Set the resolution of the simulator. The default is 100ps
+
+        :param resolution: the resolution to use.
+        """
+        self.resolution = resolution
 
     def set_default_seed(self, seed: int):
         """Set the default seed that will be used by the simulation if arguments
@@ -168,13 +192,13 @@ class TestHDL:
                 f"No simulator chosen. Supported simulators are: \n- {'\n- '.join(SUPPORTED_SIMULATORS.keys())}"
             )
 
+    def _find_test(self, test_name: str) -> Optional[TestCase]:
+        for test in self.tests:
+            if test.name == test_name:
+                return test
+
     def run(self):
         """Start the simulation"""
-        try:
-            self._validate()
-        except ValidationError as e:
-            log.error("%s", e)
-            return
 
         if self.args.compile_only:
             action = RunAction.COMPILE_ONLY
@@ -185,6 +209,20 @@ class TestHDL:
         else:
             action = RunAction.LIST_TESTS
 
+        test_to_run = None
+        try:
+            self._validate()
+
+            if action == RunAction.RUN_SINGLE_TEST:
+                test_to_run = self._find_test(self.args.test_name)
+
+                if test_to_run is None:
+                    raise ValidationError(f"Cannot find test {self.args.test_name}")
+
+        except ValidationError as e:
+            log.error("%s", e)
+            return
+
         if self.args.seed is None:
             if self.default_seed is not None and not self.args.seed_random:
                 seed = self.default_seed
@@ -193,5 +231,24 @@ class TestHDL:
         else:
             seed = self.args.seed
 
-        if action == RunAction.RUN_ALL or action == RunAction.RUN_SINGLE_TEST:
-            log.info("Seed chosen: %d", seed)
+        assert self.simulator is not None
+
+        config = RunConfig(
+            path_workdir=self.workdir,
+            path_logsdir=self.logsdir,
+            test_to_run=test_to_run,
+            tests=self.tests,
+            seed=seed,
+            resolution=self.resolution,
+            compile_args=self.compile_args,
+            runtime_args=self.runtime_args,
+            runtime_run_args=self.runtime_run_args,
+            log_all_waves=False,
+            libraries=self.libraries,
+            simulator=self.simulator,
+            test_config=self.test_config,
+        )
+
+        runner = Runner()
+
+        runner.run(action, config)
