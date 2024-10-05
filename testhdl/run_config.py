@@ -29,3 +29,4 @@ class RunConfig:
     test_config: TestConfigBase
 
     resolution: str
+    verbose: bool

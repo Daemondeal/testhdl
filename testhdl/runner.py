@@ -19,7 +19,7 @@ class Runner:
         time_start_compile = time.perf_counter()
 
         for library in self.config.libraries:
-            self.config.simulator.compile(library)
+            self.config.simulator.compile(library, self.config)
 
         elapsed = time.perf_counter() - time_start_compile
         log.info("Compilation done; took %.2f seconds", elapsed)

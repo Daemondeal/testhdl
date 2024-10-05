@@ -5,9 +5,10 @@ import random
 import logging
 import argparse
 
+from testhdl import utils
 from testhdl.logging import setup_logging
 from testhdl.models import RunAction, TestCase
-from testhdl.errors import ValidationError
+from testhdl.errors import SimulatorError, ValidationError
 from testhdl.simulator_questasim import SimulatorQuestaSim
 from testhdl.source_library import SourceLibrary
 from testhdl.runner import Runner
@@ -235,7 +236,7 @@ class TestHDL:
         else:
             seed = self.args.seed
 
-        simulator = SUPPORTED_SIMULATORS[self.simulator](self.workdir)
+        simulator = SUPPORTED_SIMULATORS[self.simulator](self.workdir, self.workdir)
 
         try:
             simulator.validate()
@@ -257,8 +258,15 @@ class TestHDL:
             libraries=self.libraries,
             simulator=simulator,
             test_config=self.test_config,
+            verbose=self.args.verbose,
         )
 
         runner = Runner(config)
 
-        runner.run(action)
+        try:
+            runner.run(action)
+        except SimulatorError as e:
+            if not self.args.verbose and e.logs_file is not None:
+                utils.print_file(e.logs_file)
+
+            log.critical("%s", e.message)
