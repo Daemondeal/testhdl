@@ -41,6 +41,8 @@ class TestHDL:
     runtime_args: List[str]
     runtime_run_args: List[str]
 
+    coverage_enabled: bool
+
     flags: List[str]
 
     resolution: str
@@ -55,6 +57,7 @@ class TestHDL:
         self.resolution = "100ps"
         self.simulator = ""
         self.default_seed = None
+        self.coverage_enabled = False
 
         self.compile_args = []
         self.runtime_args = []
@@ -259,6 +262,7 @@ class TestHDL:
             simulator=simulator,
             test_config=self.test_config,
             verbose=self.args.verbose,
+            coverage_enabled=self.coverage_enabled,
         )
 
         runner = Runner(config)

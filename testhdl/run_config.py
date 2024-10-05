@@ -28,5 +28,7 @@ class RunConfig:
     simulator: SimulatorBase
     test_config: TestConfigBase
 
+    coverage_enabled: bool
+
     resolution: str
     verbose: bool

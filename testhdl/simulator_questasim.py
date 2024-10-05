@@ -1,3 +1,5 @@
+from pathlib import Path
+from typing import List
 from testhdl import utils
 from testhdl.errors import SimulatorError, ValidationError
 from testhdl.models import HardwareLanguage
@@ -51,6 +53,7 @@ class SimulatorQuestaSim(SimulatorBase):
                 args += ["-coveropt", "3", "+cover", "-coverexcludedefault"]
 
             args += source_list.compile_args
+            args += config.compile_args
 
             for define in source_list.defines:
                 args.append(f"+define+{define}")
@@ -72,3 +75,54 @@ class SimulatorQuestaSim(SimulatorBase):
 
             if rc != 0:
                 raise SimulatorError("Compilation Failed", path_logs)
+
+    def run_simulation(
+        self,
+        top_entity: str,
+        path_outdir: Path,
+        extra_args: List[str],
+        config: RunConfig,
+    ):
+        path_wavefile = os.path.relpath(path_outdir / "wave.wlf", self.workdir)
+
+        if config.coverage_enabled:
+            extra_args.append("-coverage")
+            extra_args.append("-cvgperinstance")
+
+        # fmt: off
+        args = [
+            "vsim", "-c",
+            "-wave", path_wavefile,
+            "-t", config.resolution,
+            "-vopt", "-voptargs=+acc",
+            "-sv_seed", str(config.seed),
+            *extra_args,
+            *config.runtime_args,
+            f"{top_entity}"
+        ]
+        # fmt: on
+
+        if config.coverage_enabled:
+            path_coverfile = os.path.relpath(
+                path_outdir / "coverage.ucdb", self.workdir
+            )
+            args += [
+                "-do",
+                f"coverage save -onexit -directive -codeAll -cvg {path_coverfile}",
+            ]
+
+        # UVM components don't get instantiated until after the first timestep of the simulation,
+        # so we advance the simulation just a little in order to log them in the waveform file.
+        args += ["-do", f"run {config.resolution}"]
+        if config.log_all_waves:
+            args += ["-do", "log -r /*"]
+        args += config.runtime_run_args
+
+        args += ["-do", "run -all"]
+        args += ["-do", "quit"]
+
+        log.info("%s", utils.join_args(args))
+
+        path_simlogs = path_outdir / "simulation.log"
+
+        utils.run_program(args, self.workdir, path_simlogs, echo=config.verbose)

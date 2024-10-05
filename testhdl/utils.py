@@ -18,8 +18,8 @@ def run_program(
     print(f"cd {cwd} && ", end="")
 
     if stdout_out is None:
-        print(" ".join(args))
+        print(join_args(args))
     else:
-        print(" ".join(args) + f" > {stdout_out.as_posix()}")
+        print(join_args(args) + f" > {stdout_out.as_posix()}")
 
     return 0

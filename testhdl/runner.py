@@ -26,13 +26,19 @@ class Runner:
 
     def _run_test(self, test: TestCase):
         time_test_start = time.perf_counter()
-        log.info("Running test %d", test.name)
+        log.info("Running test %s", test.name)
 
         path_outdir = self.config.path_logsdir / test.name
         if path_outdir.exists():
             shutil.rmtree(path_outdir)
 
         path_outdir.mkdir(parents=True)
+
+        top_entity = self.config.test_config.get_top_entity(test)
+        args = self.config.test_config.get_arguments(test)
+        args += test.runtime_args
+
+        self.config.simulator.run_simulation(top_entity, path_outdir, args, self.config)
 
         test_elapsed = time.perf_counter() - time_test_start
         log.info("Test done. Took %.2f seconds", test_elapsed)
@@ -56,3 +62,6 @@ class Runner:
 
         if action == RunAction.COMPILE_ONLY:
             return
+        elif action == RunAction.RUN_SINGLE_TEST:
+            assert self.config.test_to_run is not None
+            self._run_test(self.config.test_to_run)

@@ -1,8 +1,11 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import List, TYPE_CHECKING
 
-from testhdl.run_config import RunConfig
 from testhdl.source_library import SourceLibrary
+
+if TYPE_CHECKING:
+    from testhdl.run_config import RunConfig
 
 
 class SimulatorBase(ABC):
@@ -22,5 +25,14 @@ class SimulatorBase(ABC):
     def clean(self):
         pass
 
-    def compile(self, library: SourceLibrary, config: RunConfig):
+    def compile(self, library: SourceLibrary, config: "RunConfig"):
+        pass
+
+    def run_simulation(
+        self,
+        top_entity: str,
+        path_outdir: Path,
+        extra_args: List[str],
+        config: "RunConfig",
+    ):
         pass
