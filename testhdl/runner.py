@@ -1,3 +1,4 @@
+from testhdl import utils
 from testhdl.models import RunAction, TestCase
 from testhdl.run_config import RunConfig
 
@@ -43,25 +44,34 @@ class Runner:
         test_elapsed = time.perf_counter() - time_test_start
         log.info("Test done. Took %.2f seconds", test_elapsed)
 
-    def run(self, action: RunAction):
-        if action == RunAction.LIST_TESTS:
-            print("Available tests:")
-            for test in self.config.tests:
-                print(f" - {test.name}")
-
-            return
-
-        if self.config.path_workdir.exists():
-            shutil.rmtree(self.config.path_workdir)
-
+    def _setup(self):
+        utils.rmdir_if_exists(self.config.path_workdir)
         self.config.path_workdir.mkdir(parents=True)
-
+        self.config.path_logsdir.mkdir(parents=True, exist_ok=True)
         self.config.simulator.setup()
 
-        self._compile()
+    def _clean(self):
+        log.info("Cleaning...")
+        shutil.rmtree(self.config.path_workdir)
+        shutil.rmtree(self.config.path_logsdir)
 
-        if action == RunAction.COMPILE_ONLY:
-            return
+    def _list_tests(self):
+        print("Available tests:")
+        for test in self.config.tests:
+            print(f" - {test.name}")
+
+    def run(self, action: RunAction):
+        if action == RunAction.CLEAN:
+            self._clean()
+        elif action == RunAction.LIST_TESTS:
+            self._list_tests()
+        elif action == RunAction.COMPILE_ONLY:
+            self._setup()
+            self._compile()
         elif action == RunAction.RUN_SINGLE_TEST:
             assert self.config.test_to_run is not None
+            self._setup()
+            self._compile()
             self._run_test(self.config.test_to_run)
+        elif action == RunAction.RUN_ALL:
+            assert False, "run all unimplemented"

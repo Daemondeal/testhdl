@@ -1,4 +1,5 @@
 from pathlib import Path
+import shutil
 from typing import List, Optional
 
 
@@ -10,6 +11,11 @@ def join_args(args: List[str]) -> str:
 def print_file(file: Path):
     with open(file, "r") as infile:
         print(infile.read())
+
+
+def rmdir_if_exists(dir: Path):
+    if dir.exists() and dir.is_dir():
+        shutil.rmtree(dir)
 
 
 def run_program(

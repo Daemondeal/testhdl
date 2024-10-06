@@ -12,9 +12,10 @@ class HardwareLanguage(Enum):
 
 class RunAction(Enum):
     LIST_TESTS = 0
-    COMPILE_ONLY = 1
-    RUN_SINGLE_TEST = 2
-    RUN_ALL = 3
+    CLEAN = 1
+    COMPILE_ONLY = 2
+    RUN_SINGLE_TEST = 3
+    RUN_ALL = 4
 
 
 @dataclass

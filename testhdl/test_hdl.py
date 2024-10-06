@@ -81,6 +81,10 @@ class TestHDL:
         )
 
         parser.add_argument(
+            "--clean", help="clean all temporary files", action="store_true"
+        )
+
+        parser.add_argument(
             "-a", "--all", help="run all available tests", action="store_true"
         )
 
@@ -208,7 +212,9 @@ class TestHDL:
     def run(self):
         """Start the simulation"""
 
-        if self.args.compile_only:
+        if self.args.clean:
+            action = RunAction.CLEAN
+        elif self.args.compile_only:
             action = RunAction.COMPILE_ONLY
         elif self.args.all:
             action = RunAction.RUN_ALL
