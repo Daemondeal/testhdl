@@ -6,11 +6,6 @@ logging_config = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "simple": {
-            "format": "%(levelname)s: %(message)s"
-        }
-    },
-    "formatters": {
         "color_formatter": {
             "()": "testhdl.logging.CustomColorFormatter",
         },
@@ -39,7 +34,7 @@ class CustomColorFormatter(logging.Formatter):
     bold_red = "\x1b[31;1m"
     reset = "\x1b[0m"
 
-    log_format = "%(levelname)s: %(message)s"
+    log_format = "[%(name)20s] %(levelname)7s: %(message)s"
 
     FORMATS = {
         logging.DEBUG: log_format,
