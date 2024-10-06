@@ -30,9 +30,7 @@ class Runner:
         log.info("Running test %s", test.name)
 
         path_outdir = self.config.path_logsdir / test.name
-        if path_outdir.exists():
-            shutil.rmtree(path_outdir)
-
+        utils.rmdir_if_exists(path_outdir)
         path_outdir.mkdir(parents=True)
 
         top_entity = self.config.test_config.get_top_entity(test)
@@ -42,7 +40,7 @@ class Runner:
         self.config.simulator.run_simulation(top_entity, path_outdir, args, self.config)
 
         test_elapsed = time.perf_counter() - time_test_start
-        log.info("Test done. Took %.2f seconds", test_elapsed)
+        log.info("Test done! Took %.2f seconds", test_elapsed)
 
     def _setup(self):
         utils.rmdir_if_exists(self.config.path_workdir)
@@ -52,8 +50,8 @@ class Runner:
 
     def _clean(self):
         log.info("Cleaning...")
-        shutil.rmtree(self.config.path_workdir)
-        shutil.rmtree(self.config.path_logsdir)
+        utils.rmdir_if_exists(self.config.path_workdir)
+        utils.rmdir_if_exists(self.config.path_logsdir)
 
     def _list_tests(self):
         print("Available tests:")
