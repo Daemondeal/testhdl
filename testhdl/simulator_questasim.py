@@ -33,8 +33,8 @@ class SimulatorQuestaSim(SimulatorBase):
         utils.run_program(["vdel", "-all"], cwd=self.workdir)
 
     def compile(self, library: SourceLibrary, config: RunConfig):
-        utils.run_program(["vlib", library.name], cwd=self.workdir)
-        log.info("compiling library %s", library.name)
+        utils.run_program(["vlib", library.name], cwd=self.workdir, echo=config.verbose)
+        log.info("Compiling library %s", library.name)
 
         for source_list in library.source_lists:
             if source_list.language == HardwareLanguage.VHDL:

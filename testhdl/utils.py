@@ -2,7 +2,10 @@ from pathlib import Path
 from typing import List, Optional
 
 import shutil
+import logging
 import subprocess
+
+log = logging.getLogger("testhdl")
 
 
 def join_args(args: List[str]) -> str:
@@ -26,6 +29,7 @@ READ_CHUNK_SIZE = 4096
 def run_program(
     args: List[str], cwd: Path, stdout_out: Optional[Path] = None, echo: bool = False
 ) -> int:
+    log.debug("Running '%s'", join_args(args))
 
     file_out = None
     if stdout_out is not None:

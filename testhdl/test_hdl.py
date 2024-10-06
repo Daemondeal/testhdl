@@ -245,7 +245,7 @@ class TestHDL:
         else:
             seed = self.args.seed
 
-        simulator = SUPPORTED_SIMULATORS[self.simulator](self.workdir, self.workdir)
+        simulator = SUPPORTED_SIMULATORS[self.simulator](self.workdir, self.logsdir)
 
         try:
             simulator.validate()

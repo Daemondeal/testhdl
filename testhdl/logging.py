@@ -28,7 +28,7 @@ logging_config = {
 
 # Taken from https://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
 class CustomColorFormatter(logging.Formatter):
-    grey = "\x1b[38;20m"
+    grey = "\x1b[36;20m"
     yellow = "\x1b[33;20m"
     red = "\x1b[31;20m"
     bold_red = "\x1b[31;1m"
@@ -37,7 +37,7 @@ class CustomColorFormatter(logging.Formatter):
     log_format = "[%(name)20s] %(levelname)7s: %(message)s"
 
     FORMATS = {
-        logging.DEBUG: log_format,
+        logging.DEBUG: grey + log_format + reset,
         logging.INFO: log_format,
         logging.WARNING: yellow + log_format + reset,
         logging.ERROR: red + log_format + reset,

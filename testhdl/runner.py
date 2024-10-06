@@ -40,7 +40,7 @@ class Runner:
         self.config.simulator.run_simulation(top_entity, path_outdir, args, self.config)
 
         test_elapsed = time.perf_counter() - time_test_start
-        log.info("Test done! Took %.2f seconds", test_elapsed)
+        log.info("Test successful! Took %.2f seconds", test_elapsed)
 
     def _setup(self):
         utils.rmdir_if_exists(self.config.path_workdir)
