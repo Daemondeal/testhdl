@@ -32,7 +32,11 @@ class SimulatorBase(ABC):
         self,
         top_entity: str,
         path_outdir: Path,
+        path_simlogs: Path,
         extra_args: List[str],
         config: "RunConfig",
     ):
         pass
+
+    def did_error_happen(self, path_logs: Path) -> bool:
+        return False

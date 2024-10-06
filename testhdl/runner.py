@@ -1,4 +1,5 @@
 from testhdl import utils
+from testhdl.errors import TestRunError
 from testhdl.models import RunAction, TestCase
 from testhdl.run_config import RunConfig
 
@@ -33,11 +34,27 @@ class Runner:
         utils.rmdir_if_exists(path_outdir)
         path_outdir.mkdir(parents=True)
 
-        top_entity = self.config.test_config.get_top_entity(test)
-        args = self.config.test_config.get_arguments(test)
+        top_entity = self.config.test_framework.get_top_entity(test)
+        args = self.config.test_framework.get_arguments(test)
         args += test.runtime_args
 
-        self.config.simulator.run_simulation(top_entity, path_outdir, args, self.config)
+        path_simlogs = path_outdir / "simulator.log"
+        self.config.simulator.run_simulation(
+            top_entity, path_outdir, path_simlogs, args, self.config
+        )
+
+        if not path_simlogs.exists():
+            raise TestRunError("Log file not created", None)
+
+        if self.config.simulator.did_error_happen(path_simlogs):
+            raise TestRunError("An error happened while simulating", path_simlogs)
+
+        errors = self.config.test_framework.get_number_of_errors(test, path_simlogs)
+
+        if errors > 0:
+            raise TestRunError(
+                f"Simulation finished with {errors} errors", path_simlogs
+            )
 
         test_elapsed = time.perf_counter() - time_test_start
         log.info("Test successful! Took %.2f seconds", test_elapsed)

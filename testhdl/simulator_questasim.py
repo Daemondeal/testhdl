@@ -80,6 +80,7 @@ class SimulatorQuestaSim(SimulatorBase):
         self,
         top_entity: str,
         path_outdir: Path,
+        path_simlogs: Path,
         extra_args: List[str],
         config: RunConfig,
     ):
@@ -123,6 +124,13 @@ class SimulatorQuestaSim(SimulatorBase):
 
         log.info("%s", utils.join_args(args))
 
-        path_simlogs = path_outdir / "simulation.log"
+        rc = utils.run_program(args, self.workdir, path_simlogs, echo=config.verbose)
 
-        utils.run_program(args, self.workdir, path_simlogs, echo=config.verbose)
+        if rc != 0:
+            raise SimulatorError(
+                "Simulator exited with nonzero return code", path_simlogs
+            )
+
+    def did_error_happen(self, path_logs: Path) -> bool:
+        # TODO: Figure this out
+        return False

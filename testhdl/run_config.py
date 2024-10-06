@@ -2,8 +2,9 @@ from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Optional
 
+from testhdl import test_framework
 from testhdl.source_library import SourceLibrary
-from testhdl.test_config import TestConfigBase
+from testhdl.test_framework import TestFrameworkBase
 from testhdl.simulator_base import SimulatorBase
 from testhdl.models import TestCase
 
@@ -26,7 +27,7 @@ class RunConfig:
 
     libraries: List[SourceLibrary]
     simulator: SimulatorBase
-    test_config: TestConfigBase
+    test_framework: TestFrameworkBase
 
     coverage_enabled: bool
 

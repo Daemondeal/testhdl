@@ -8,15 +8,15 @@ import argparse
 from testhdl import utils
 from testhdl.logging import setup_logging
 from testhdl.models import RunAction, TestCase
-from testhdl.errors import SimulatorError, ValidationError
+from testhdl.errors import SimulatorError, TestRunError, ValidationError
 from testhdl.simulator_questasim import SimulatorQuestaSim
 from testhdl.source_library import SourceLibrary
 from testhdl.runner import Runner
 from testhdl.run_config import RunConfig
-from testhdl.test_config import (
-    TestConfigBase,
-    TestConfigUVM,
-    TestConfigSeparateEntities,
+from testhdl.test_framework import (
+    TestFrameworkBase,
+    TestFrameworkVHDL,
+    TestFrameworkUVM,
 )
 
 log = logging.getLogger("testhdl")
@@ -32,7 +32,7 @@ class TestHDL:
     logsdir: Path
     default_seed: Optional[int]
 
-    test_config: TestConfigBase
+    test_framework: TestFrameworkBase
     simulator: str
     libraries: List[SourceLibrary]
     tests: List[TestCase]
@@ -53,7 +53,7 @@ class TestHDL:
         self.logsdir = Path("logs")
         self.libraries = []
         self.tests = []
-        self.test_config = TestConfigSeparateEntities()
+        self.test_framework = TestFrameworkVHDL()
         self.resolution = "100ps"
         self.simulator = ""
         self.default_seed = None
@@ -166,12 +166,12 @@ class TestHDL:
         self.libraries.append(library)
         return library
 
-    def set_config_uvm(self, top_entity: str):
-        """Set UVM as the test environment
+    def set_framework_uvm(self, top_entity: str):
+        """Set UVM as the test framework
 
         :param top_entity: the top entity to use for UVM simulations
         """
-        self.test_config = TestConfigUVM(top_entity)
+        self.test_framework = TestFrameworkUVM(top_entity)
 
     def set_simulator(self, simulator_name: str):
         """Set the simulator to used
@@ -266,7 +266,7 @@ class TestHDL:
             log_all_waves=False,
             libraries=self.libraries,
             simulator=simulator,
-            test_config=self.test_config,
+            test_framework=self.test_framework,
             verbose=self.args.verbose,
             coverage_enabled=self.coverage_enabled,
         )
@@ -275,6 +275,12 @@ class TestHDL:
 
         try:
             runner.run(action)
+        except TestRunError as e:
+            if not self.args.verbose and e.logs_file is not None:
+                utils.print_file(e.logs_file)
+
+            log.error("%s", e.message)
+
         except SimulatorError as e:
             if not self.args.verbose and e.logs_file is not None:
                 utils.print_file(e.logs_file)

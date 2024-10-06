@@ -112,7 +112,6 @@ class SourceLibrary:
         incdir: Optional[str] = None,
         coverage_enabled: bool = False
     ):
-
         path_sources = []
         for path in paths:
             source = Path(path)

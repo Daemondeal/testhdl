@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Optional
 
+from testhdl.models import TestCase
+
 
 class SimulatorError(Exception):
     message: str
@@ -17,3 +19,17 @@ class SimulatorError(Exception):
 
 class ValidationError(Exception):
     pass
+
+
+class TestRunError(Exception):
+    message: str
+    test: TestCase
+    logs_file: Optional[Path]
+
+    def __init__(self, message, logs_file):
+        super().__init__(self, message)
+        self.message = message
+        self.logs_file = logs_file
+
+    def __str__(self):
+        return f"Test {self.test.name} failed - {self.message}"
