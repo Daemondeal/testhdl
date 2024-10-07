@@ -55,6 +55,9 @@ class SimulatorQuestaSim(SimulatorBase):
             if source_list.coverage_enabled:
                 args += ["-coveropt", "3", "+cover", "-coverexcludedefault"]
 
+            if program == "vcom":
+                args.append("-mixedsvvh")
+
             args += source_list.compile_args
             args += config.compile_args
 
