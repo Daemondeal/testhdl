@@ -134,5 +134,9 @@ class SimulatorQuestaSim(SimulatorBase):
             )
 
     def did_error_happen(self, path_logs: Path) -> bool:
-        # TODO: Figure this out
+        with open(path_logs, "r") as logfile:
+            for line in logfile:
+                if "Fatal:" in line:
+                    return True
+
         return False
