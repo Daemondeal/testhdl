@@ -47,10 +47,10 @@ class TestHDL:
 
     resolution: str
 
-    def __init__(self, args):
+    def __init__(self, args, logdir):
         self.args = args
         self.workdir = Path("build")
-        self.logsdir = Path("logs")
+        self.logsdir = logdir
         self.libraries = []
         self.tests = []
         self.test_framework = TestFrameworkVHDL()
@@ -66,9 +66,9 @@ class TestHDL:
         self.flags = [flag.lower() for flag in args.flag]
 
     @staticmethod
-    def from_args(logging_enabled: bool = True):
+    def from_args(logdir: Path = Path("logs"), logging_enabled: bool = True):
         if logging_enabled:
-            setup_logging()
+            setup_logging(logdir)
 
         parser = argparse.ArgumentParser()
 
@@ -117,7 +117,7 @@ class TestHDL:
 
         args = parser.parse_args()
 
-        return TestHDL(args)
+        return TestHDL(args, logdir)
 
     def is_flag_enabled(self, flag: str) -> bool:
         """Check if a compile time flag is enabled or not.
@@ -149,13 +149,6 @@ class TestHDL:
         :param workdir: path to the directory
         """
         self.workdir = Path(workdir)
-
-    def set_logdir(self, logdir: str):
-        """Set the directory where the reports will get stored. Defaults to 'logs'
-
-        :param logdir: path to the directory
-        """
-        self.logsdir = Path(logdir)
 
     def add_library(self, name: str) -> SourceLibrary:
         """Add a new design library

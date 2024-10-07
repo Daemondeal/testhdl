@@ -8,6 +8,7 @@ from testhdl.simulator_base import SimulatorBase
 from testhdl.source_library import SourceLibrary
 
 import os
+import time
 import shutil
 import logging
 
@@ -34,7 +35,9 @@ class SimulatorQuestaSim(SimulatorBase):
 
     def compile(self, library: SourceLibrary, config: RunConfig):
         utils.run_program(["vlib", library.name], cwd=self.workdir, echo=config.verbose)
+
         log.info("Compiling library %s", library.name)
+        time_start = time.perf_counter()
 
         for source_list in library.source_lists:
             if source_list.language == HardwareLanguage.VHDL:
@@ -66,8 +69,6 @@ class SimulatorQuestaSim(SimulatorBase):
                 new_path = os.path.relpath(path, self.workdir)
                 args.append(new_path)
 
-            log.info("%s", utils.join_args(args))
-
             path_logs = self.logsdir / f"compile_{library.name}.log"
             rc = utils.run_program(
                 args, cwd=self.workdir, stdout_out=path_logs, echo=config.verbose
@@ -75,6 +76,9 @@ class SimulatorQuestaSim(SimulatorBase):
 
             if rc != 0:
                 raise SimulatorError("Compilation Failed", path_logs)
+
+        elapsed = time.perf_counter() - time_start
+        log.info("Done! Took %.2f seconds", elapsed)
 
     def run_simulation(
         self,
@@ -121,8 +125,6 @@ class SimulatorQuestaSim(SimulatorBase):
 
         args += ["-do", "run -all"]
         args += ["-do", "quit"]
-
-        log.info("%s", utils.join_args(args))
 
         rc = utils.run_program(args, self.workdir, path_simlogs, echo=config.verbose)
 
