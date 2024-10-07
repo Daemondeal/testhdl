@@ -57,6 +57,7 @@ class SimulatorQuestaSim(SimulatorBase):
 
             if program == "vcom":
                 args.append("-mixedsvvh")
+                args.append("pc")
 
             args += source_list.compile_args
             args += config.compile_args
