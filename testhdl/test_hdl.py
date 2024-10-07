@@ -41,6 +41,8 @@ class TestHDL:
     runtime_args: List[str]
     runtime_run_args: List[str]
 
+    additional_files: List[Path]
+
     coverage_enabled: bool
 
     flags: List[str]
@@ -58,6 +60,7 @@ class TestHDL:
         self.simulator = ""
         self.default_seed = None
         self.coverage_enabled = False
+        self.additional_files = []
 
         self.compile_args = []
         self.runtime_args = []
@@ -177,6 +180,18 @@ class TestHDL:
 
         self.simulator = simulator_name
 
+    def add_file(self, file: str):
+        """Copies a file in the working directory. Useful for managing testvectors.
+
+        :param file: the path for the file to copy
+        """
+
+        path_file = Path(file)
+        if not path_file.exists():
+            raise ValidationError(f"File {path_file.as_posix()} not found")
+
+        self.additional_files.append(path_file)
+
     def add_test(self, test_name: str, *, runtime_args: Optional[List[str]] = None):
         """Add a test to the tests list.
 
@@ -262,6 +277,7 @@ class TestHDL:
             test_framework=self.test_framework,
             verbose=self.args.verbose,
             coverage_enabled=self.coverage_enabled,
+            additional_files=self.additional_files,
         )
 
         runner = Runner(config)

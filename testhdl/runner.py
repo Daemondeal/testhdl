@@ -73,6 +73,11 @@ class Runner:
         utils.rmdir_if_exists(self.config.path_workdir)
         self.config.path_workdir.mkdir(parents=True)
         self.config.path_logsdir.mkdir(parents=True, exist_ok=True)
+
+        for file in self.config.additional_files:
+            path_new = self.config.path_workdir / file.name
+            shutil.copyfile(file, path_new)
+
         self.config.simulator.setup()
 
     def _clean(self):

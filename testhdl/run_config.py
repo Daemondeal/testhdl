@@ -2,7 +2,6 @@ from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Optional
 
-from testhdl import test_framework
 from testhdl.source_library import SourceLibrary
 from testhdl.test_framework import TestFrameworkBase
 from testhdl.simulator_base import SimulatorBase
@@ -28,6 +27,8 @@ class RunConfig:
     libraries: List[SourceLibrary]
     simulator: SimulatorBase
     test_framework: TestFrameworkBase
+
+    additional_files: List[Path]
 
     coverage_enabled: bool
 
