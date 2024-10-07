@@ -58,6 +58,7 @@ def get_logging_config(logdir: Path):
 class CustomColorFormatter(logging.Formatter):
     grey = "\x1b[36;20m"
     yellow = "\x1b[33;20m"
+    green = "\x1b[32;20m"
     red = "\x1b[31;20m"
     bold_red = "\x1b[31;1m"
     reset = "\x1b[0m"
@@ -74,6 +75,14 @@ class CustomColorFormatter(logging.Formatter):
 
     def format(self, record):
         log_fmt = self.FORMATS.get(record.levelno)
+
+        if (
+            log_fmt is not None
+            and "success" in record.__dict__
+            and record.__dict__["success"]
+        ):
+            log_fmt = self.green + log_fmt + self.reset
+
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
 

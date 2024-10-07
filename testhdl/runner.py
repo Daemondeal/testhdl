@@ -47,7 +47,7 @@ class Runner:
             raise TestRunError("Log file not created", None)
 
         if self.config.simulator.did_error_happen(path_simlogs):
-            raise TestRunError("An error happened while simulating", path_simlogs)
+            raise TestRunError(f"Error during simulation ({test.name})", path_simlogs)
 
         errors = self.config.test_framework.get_number_of_errors(test, path_simlogs)
 
@@ -57,7 +57,9 @@ class Runner:
             )
 
         test_elapsed = time.perf_counter() - time_test_start
-        log.info("Test successful! Took %.2f seconds", test_elapsed)
+        log.info(
+            "Test successful! Took %.2f seconds", test_elapsed, extra={"success": True}
+        )
 
     def _run_all_tests(self):
         time_start = time.perf_counter()
