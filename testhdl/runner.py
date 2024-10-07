@@ -59,6 +59,16 @@ class Runner:
         test_elapsed = time.perf_counter() - time_test_start
         log.info("Test successful! Took %.2f seconds", test_elapsed)
 
+    def _run_all_tests(self):
+        time_start = time.perf_counter()
+
+        for i, test in enumerate(self.config.tests):
+            log.info("Running test %d/%d", i + 1, len(self.config.tests))
+            self._run_test(test)
+
+        elapsed = time.perf_counter() - time_start
+        log.info("All tests ran! Took %.2f seconds", elapsed)
+
     def _setup(self):
         utils.rmdir_if_exists(self.config.path_workdir)
         self.config.path_workdir.mkdir(parents=True)
@@ -89,4 +99,6 @@ class Runner:
             self._compile()
             self._run_test(self.config.test_to_run)
         elif action == RunAction.RUN_ALL:
-            assert False, "run all unimplemented"
+            self._setup()
+            self._compile()
+            self._run_all_tests()
