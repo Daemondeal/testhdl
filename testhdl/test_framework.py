@@ -47,13 +47,15 @@ class TestFrameworkUVM(TestFrameworkBase):
         return self.top_entity
 
     def get_arguments(self, test: TestCase) -> List[str]:
-        return [f"+UVM_TEST={test}"] + test.runtime_args
+        return [f"+UVM_TESTNAME={test.name}"] + test.runtime_args
 
     def get_number_of_errors(self, test: TestCase, path_logfile: Path) -> int:
         errors = 0
 
         with open(path_logfile, "r") as logfile:
             for line in logfile:
+                if "UVM Report Summary" in line:
+                    break
                 if "UVM_ERROR" in line or "UVM_FATAL" in line:
                     errors += 1
 
