@@ -208,8 +208,9 @@ class TestHDL:
             raise ValidationError("No tests defined.")
 
         if self.simulator == "":
+            simulators = "\n- ".join(SUPPORTED_SIMULATORS.keys())
             raise ValidationError(
-                f"No simulator chosen. Supported simulators are: \n- {'\n- '.join(SUPPORTED_SIMULATORS.keys())}"
+                f"No simulator chosen. Supported simulators are: \n- {simulators}"
             )
 
     def _find_test(self, test_name: str) -> Optional[TestCase]:

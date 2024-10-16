@@ -5,7 +5,6 @@ import json
 import logging
 
 from pathlib import Path
-from typing import override
 
 # fmt: off
 def get_logging_config(logdir: Path):
@@ -119,12 +118,11 @@ class MyJSONFormatter(logging.Formatter):
     def __init__(
         self,
         *,
-        fmt_keys: dict[str, str] | None = None,
+        fmt_keys=None,
     ):
         super().__init__()
         self.fmt_keys = fmt_keys if fmt_keys is not None else {}
 
-    @override
     def format(self, record: logging.LogRecord) -> str:
         message = self._prepare_log_dict(record)
         return json.dumps(message, default=str)
@@ -142,14 +140,24 @@ class MyJSONFormatter(logging.Formatter):
         if record.stack_info is not None:
             always_fields["stack_info"] = self.formatStack(record.stack_info)
 
-        message = {
-            key: (
-                msg_val
-                if (msg_val := always_fields.pop(val, None)) is not None
-                else getattr(record, val)
-            )
-            for key, val in self.fmt_keys.items()
-        }
+        message = {}
+
+        for key, val in self.fmt_keys.items():
+            msg_val = always_fields.pop(val, None)
+            if msg_val is not None:
+                v = msg_val
+            else:
+                v = getattr(record, val)
+            message[key] = v
+
+        # message = {
+        #     key: (
+        #         msg_val
+        #         if (msg_val := always_fields.pop(val, None)) is not None
+        #         else getattr(record, val)
+        #     )
+        #     for key, val in self.fmt_keys.items()
+        # }
         message.update(always_fields)
 
         for key, val in record.__dict__.items():
