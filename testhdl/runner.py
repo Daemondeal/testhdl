@@ -1,11 +1,14 @@
 from testhdl import utils
-from testhdl.errors import TestRunError
+from testhdl.errors import TestRunError, ValidationError
 from testhdl.models import RunAction, TestCase
 from testhdl.run_config import RunConfig
+
+from typing import Optional
 
 import time
 import shutil
 import logging
+import webbrowser
 
 log = logging.getLogger("testhdl")
 
@@ -30,13 +33,15 @@ class Runner:
         time_test_start = time.perf_counter()
         log.info("Running test %s", test.name)
 
+        for test_hook in test.pre_hooks:
+            test_hook.run_hook(self.config)
+
         path_outdir = self.config.path_logsdir / test.name
         utils.rmdir_if_exists(path_outdir)
         path_outdir.mkdir(parents=True)
 
         top_entity = self.config.test_framework.get_top_entity(test)
         args = self.config.test_framework.get_arguments(test)
-        args += test.runtime_args
 
         path_simlogs = path_outdir / "simulator.log"
         self.config.simulator.run_simulation(
@@ -53,7 +58,7 @@ class Runner:
 
         if errors > 0:
             raise TestRunError(
-                f"Simulation finished with {errors} errors", path_simlogs
+                f"Simulation finished with {errors} errors ({test.name})", path_simlogs
             )
 
         test_elapsed = time.perf_counter() - time_test_start
@@ -70,6 +75,31 @@ class Runner:
 
         elapsed = time.perf_counter() - time_start
         log.info("All tests ran! Took %.2f seconds", elapsed)
+
+        if self.config.coverage_enabled:
+            coverage_files = []
+            for test in self.config.tests:
+                coverage_files.append(self.config.path_logsdir / test.name)
+            self.config.simulator.merge_coverages(
+                self.config.path_logsdir, coverage_files
+            )
+            log.info(
+                'Coverage info merged in folder "%s"',
+                self.config.path_logsdir.as_posix(),
+            )
+
+    def _show_waves(self, test: TestCase):
+        path_outdir = self.config.path_logsdir / test.name
+
+        self.config.simulator.show_waves(path_outdir, self.config)
+
+    def _show_coverage(self, test: Optional[TestCase]):
+        if test is None:
+            path_logs = self.config.path_logsdir
+        else:
+            path_logs = self.config.path_logsdir / test.name
+
+        self.config.simulator.show_coverage(path_logs)
 
     def _setup(self):
         utils.rmdir_if_exists(self.config.path_workdir)
@@ -100,6 +130,8 @@ class Runner:
         elif action == RunAction.COMPILE_ONLY:
             self._setup()
             self._compile()
+        if action == RunAction.SHOW_COVERAGE:
+            self._show_coverage(self.config.test_to_run)
         elif action == RunAction.RUN_SINGLE_TEST:
             assert self.config.test_to_run is not None
             self._setup()
@@ -109,3 +141,6 @@ class Runner:
             self._setup()
             self._compile()
             self._run_all_tests()
+        elif action == RunAction.SHOW_WAVES:
+            assert self.config.test_to_run is not None
+            self._show_waves(self.config.test_to_run)

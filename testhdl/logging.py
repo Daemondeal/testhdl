@@ -62,7 +62,7 @@ class CustomColorFormatter(logging.Formatter):
     bold_red = "\x1b[31;1m"
     reset = "\x1b[0m"
 
-    log_format = "[%(name)20s] %(levelname)7s: %(message)s"
+    log_format = "[%(name)9s] %(levelname)5s: %(message)s"
 
     FORMATS = {
         logging.DEBUG: grey + log_format + reset,

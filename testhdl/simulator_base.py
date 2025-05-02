@@ -25,6 +25,9 @@ class SimulatorBase(ABC):
     def clean(self):
         pass
 
+    def show_coverage(self, path_logsdir: Path):
+        pass
+
     def compile(self, library: SourceLibrary, config: "RunConfig"):
         pass
 
@@ -40,3 +43,9 @@ class SimulatorBase(ABC):
 
     def did_error_happen(self, path_logs: Path) -> bool:
         return False
+
+    def merge_coverages(self, path_dest: Path, path_sources: List[Path]):
+        pass
+
+    def show_waves(self, path_logs: Path, config: "RunConfig"):
+        pass

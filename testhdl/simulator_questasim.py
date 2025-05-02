@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import List
+import webbrowser
 from testhdl import utils
 from testhdl.errors import SimulatorError, ValidationError
 from testhdl.models import HardwareLanguage
@@ -12,7 +13,8 @@ import time
 import shutil
 import logging
 
-log = logging.getLogger("testhdl.questasim")
+# log = logging.getLogger("testhdl.questasim")
+log = logging.getLogger("questasim")
 
 
 class SimulatorQuestaSim(SimulatorBase):
@@ -56,6 +58,7 @@ class SimulatorQuestaSim(SimulatorBase):
                 args += ["-coveropt", "3", "+cover", "-coverexcludedefault"]
 
             if program == "vcom":
+                args.append("-2008")
                 args.append("-mixedsvvh")
                 args.append("pc")
 
@@ -83,6 +86,26 @@ class SimulatorQuestaSim(SimulatorBase):
 
         elapsed = time.perf_counter() - time_start
         log.info("Done! Took %.2f seconds", elapsed)
+
+    def show_waves(
+        self,
+        path_logs: Path,
+        config: RunConfig,
+    ):
+
+        path_wavefile = path_logs / "wave.wlf"
+        path_wavefile_rel = os.path.relpath(path_logs / "wave.wlf", self.workdir)
+
+        if not path_wavefile.exists():
+            raise SimulatorError(
+                "Wavefile not found. Make sure you run the simulation first", None
+            )
+
+        args = ["vsim", "-view", path_wavefile_rel]
+        rc = utils.run_program(args, cwd=self.workdir, echo=config.verbose)
+
+        if rc != 0:
+            raise SimulatorError("Could not show waves", None)
 
     def run_simulation(
         self,
@@ -144,3 +167,49 @@ class SimulatorQuestaSim(SimulatorBase):
                     return True
 
         return False
+
+    def show_coverage(self, path_logsdir: Path):
+        path_logs = path_logsdir / "coverage.ucdb"
+        if not path_logs.exists():
+            raise SimulatorError(
+                f'Couldn\'t find "{path_logs.as_posix()}"', logs_file=None
+            )
+
+        relpath_logs = os.path.relpath(path_logs.as_posix(), self.workdir)
+
+        # fmt: off
+        args = [
+            "vcover", "report", "-details",
+            "-html", relpath_logs,
+            "-output", "./html_cov",
+        ]
+        # fmt: on
+
+        path_vcoverlog = self.workdir / "vcover_html.log"
+        rc = utils.run_program(args, self.workdir, path_vcoverlog)
+        if rc != 0:
+            raise SimulatorError(
+                "Vcover exited with nonzero return code", path_vcoverlog
+            )
+
+        webbrowser.open((self.workdir / "html_cov" / "index.html").as_posix())
+
+    def merge_coverages(self, path_dest: Path, path_sources: List[Path]):
+        path_dest_rel = os.path.relpath(
+            (path_dest / "coverage.ucdb").as_posix(), self.workdir
+        )
+        args = ["vcover", "merge", path_dest_rel]
+
+        for source in path_sources:
+            path_ucdb = (source / "coverage.ucdb").as_posix()
+            path_rel = os.path.relpath(path_ucdb, self.workdir)
+
+            args.append(path_rel)
+
+        path_vcoverlog = self.workdir / "vcover_merge.log"
+
+        rc = utils.run_program(args, self.workdir, path_vcoverlog)
+        if rc != 0:
+            raise SimulatorError(
+                "Vcover exited with nonzero return code", path_vcoverlog
+            )

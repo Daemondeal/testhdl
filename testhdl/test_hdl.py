@@ -5,6 +5,7 @@ import random
 import logging
 import argparse
 
+from testhdl.hooks import TestHook
 from testhdl import utils
 from testhdl.logging import setup_logging
 from testhdl.models import RunAction, TestCase
@@ -60,6 +61,7 @@ class TestHDL:
         self.simulator = ""
         self.default_seed = None
         self.coverage_enabled = False
+        self.log_all_waves = False
         self.additional_files = []
 
         self.compile_args = []
@@ -84,7 +86,19 @@ class TestHDL:
         )
 
         parser.add_argument(
+            "--show-waves",
+            help="show only the waves. Requires to have run the simulation of the specified test at least once",
+            action="store_true",
+        )
+
+        parser.add_argument(
             "--clean", help="clean all temporary files", action="store_true"
+        )
+
+        parser.add_argument(
+            "--coverage",
+            help="shows the coverage in a browser file",
+            action="store_true",
         )
 
         parser.add_argument(
@@ -130,6 +144,10 @@ class TestHDL:
         """
         return flag.lower() in self.flags
 
+    def set_log_all_waves(self):
+        """Tell the simulator to log all waves during simulation"""
+        self.log_all_waves = True
+
     def set_resolution(self, resolution: str):
         """Set the resolution of the simulator. The default is 100ps
 
@@ -145,6 +163,10 @@ class TestHDL:
         :param seed: the seed to set
         """
         self.default_seed = seed
+
+    def enable_coverage(self):
+        """Enables coverage collection"""
+        self.coverage_enabled = True
 
     def set_workdir(self, workdir: str):
         """Set the directory where the simulator will get called. Defaults to 'build'
@@ -162,12 +184,23 @@ class TestHDL:
         self.libraries.append(library)
         return library
 
-    def set_framework_uvm(self, top_entity: str):
+    def set_framework(self, framework: TestFrameworkBase):
+        """Sets a custom TestFramework
+
+        :param framework: the framework to set
+        """
+
+        self.test_framework = framework
+
+    def set_framework_uvm(self, top_entity: str, max_quit_count: int = 0):
         """Set UVM as the test framework
 
         :param top_entity: the top entity to use for UVM simulations
+        :param max_quit_count: the maximum amount of errors before quitting earl
         """
-        self.test_framework = TestFrameworkUVM(top_entity)
+        self.test_framework = TestFrameworkUVM(
+            top_entity, max_quit_count=max_quit_count
+        )
 
     def set_simulator(self, simulator_name: str):
         """Set the simulator to used
@@ -179,6 +212,31 @@ class TestHDL:
             exit(-1)
 
         self.simulator = simulator_name
+
+    def add_compile_argument(self, argument: str):
+        """Adds a compiler argument to the simulator
+
+        :param arg: the argument to add
+        """
+
+        self.compile_args.append(argument)
+
+    def add_runtime_argument(self, argument: str):
+        """Adds a runtime argument to the simulator
+
+        :param arg: the argument to add
+        """
+
+        self.runtime_args.append(argument)
+
+    def add_runtime_run_arguments(self, *arguments: str):
+        """Adds runtime arguments to the simulator to be run after the first tick is simulated.
+        Can be useful to add more waves in the logfile.
+
+        :param arg: the arguments to add
+        """
+
+        self.runtime_run_args += arguments
 
     def add_file(self, file: str):
         """Copies a file in the working directory. Useful for managing testvectors.
@@ -192,7 +250,14 @@ class TestHDL:
 
         self.additional_files.append(path_file)
 
-    def add_test(self, test_name: str, *, runtime_args: Optional[List[str]] = None):
+    def add_test(
+        self,
+        test_name: str,
+        *,
+        runtime_args: Optional[List[str]] = None,
+        pre_hooks: Optional[List[TestHook]] = None,
+        post_hooks: Optional[List[TestHook]] = None,
+    ):
         """Add a test to the tests list.
 
         :param test_name: the name of the test to add
@@ -201,7 +266,13 @@ class TestHDL:
         if runtime_args is None:
             runtime_args = []
 
-        self.tests.append(TestCase(test_name, runtime_args))
+        if pre_hooks is None:
+            pre_hooks = []
+
+        if post_hooks is None:
+            post_hooks = []
+
+        self.tests.append(TestCase(test_name, runtime_args, pre_hooks, post_hooks))
 
     def _validate(self):
         if len(self.tests) <= 0:
@@ -221,7 +292,11 @@ class TestHDL:
     def run(self):
         """Start the simulation"""
 
-        if self.args.clean:
+        if self.args.coverage:
+            action = RunAction.SHOW_COVERAGE
+        elif self.args.show_waves:
+            action = RunAction.SHOW_WAVES
+        elif self.args.clean:
             action = RunAction.CLEAN
         elif self.args.compile_only:
             action = RunAction.COMPILE_ONLY
@@ -236,7 +311,7 @@ class TestHDL:
         try:
             self._validate()
 
-            if action == RunAction.RUN_SINGLE_TEST:
+            if action == RunAction.RUN_SINGLE_TEST or action == RunAction.SHOW_WAVES:
                 test_to_run = self._find_test(self.args.test_name)
 
                 if test_to_run is None:
@@ -272,7 +347,7 @@ class TestHDL:
             compile_args=self.compile_args,
             runtime_args=self.runtime_args,
             runtime_run_args=self.runtime_run_args,
-            log_all_waves=False,
+            log_all_waves=self.log_all_waves,
             libraries=self.libraries,
             simulator=simulator,
             test_framework=self.test_framework,

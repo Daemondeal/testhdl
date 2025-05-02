@@ -23,7 +23,6 @@ class ValidationError(Exception):
 
 class TestRunError(Exception):
     message: str
-    test: TestCase
     logs_file: Optional[Path]
 
     def __init__(self, message, logs_file):
@@ -32,4 +31,4 @@ class TestRunError(Exception):
         self.logs_file = logs_file
 
     def __str__(self):
-        return f"Test {self.test.name} failed - {self.message}"
+        return f"Test failed - {self.message}"

@@ -1,6 +1,9 @@
 from pathlib import Path
 from typing import List, Optional
 
+import re
+import sys
+import select
 import shutil
 import logging
 import subprocess
@@ -23,13 +26,16 @@ def rmdir_if_exists(dir: Path):
         shutil.rmtree(dir)
 
 
-READ_CHUNK_SIZE = 4096
+READ_CHUNK_SIZE = 1024 * 4
+
+re_progress = r"{([0-9\.]+) ns}"
 
 
 def run_program(
     args: List[str], cwd: Path, stdout_out: Optional[Path] = None, echo: bool = False
 ) -> int:
     log.debug("Running '%s'", join_args(args))
+    found_timestamp = False
 
     file_out = None
     if stdout_out is not None:
@@ -40,34 +46,34 @@ def run_program(
             assert proc.stdout is not None
 
             while True:
-                chunk = proc.stdout.read(1024)
-                if len(chunk) == 0:
+                # chunk = proc.stdout.read(READ_CHUNK_SIZE)
+                chunk = proc.stdout.readline()
+                if not chunk:
                     break
 
+                decoded = chunk.decode("utf-8")
+
+                if "run -all" in decoded:
+                    log.info("Simulation Started!")
+
+                match = re.search(re_progress, decoded)
+                if match:
+                    if not echo:
+                        print("\rLast timestamp: " + match.group(0), end="")
+                    found_timestamp = True
+
                 if echo:
-                    print(chunk.decode("utf-8"))
+                    # Better redirection
+                    sys.stdout.buffer.write(chunk)
                 if file_out is not None:
                     file_out.write(chunk)
 
-            rc = proc.poll()
-            assert rc is not None
+            # TODO: Adding a timeout here could be important
+            rc = proc.wait()
             return rc
 
     finally:
+        if found_timestamp:
+            print()
         if file_out is not None:
             file_out.close()
-
-    return run_program_stub(args, cwd, stdout_out, echo)
-
-
-def run_program_stub(
-    args: List[str], cwd: Path, stdout_out: Optional[Path] = None, echo: bool = False
-) -> int:
-    print(f"cd {cwd} && ", end="")
-
-    if stdout_out is None:
-        print(join_args(args))
-    else:
-        print(join_args(args) + f" > {stdout_out.as_posix()}")
-
-    return 0

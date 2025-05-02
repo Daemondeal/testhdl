@@ -3,6 +3,8 @@ from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Optional
 
+from testhdl.hooks import TestHook
+
 
 class HardwareLanguage(Enum):
     VHDL = "vhdl"
@@ -16,6 +18,8 @@ class RunAction(Enum):
     COMPILE_ONLY = 2
     RUN_SINGLE_TEST = 3
     RUN_ALL = 4
+    SHOW_WAVES = 5
+    SHOW_COVERAGE = 6
 
 
 @dataclass
@@ -32,6 +36,8 @@ class SourceList:
 class TestCase:
     name: str
     runtime_args: List[str]
+    pre_hooks: List[TestHook]
+    post_hooks: List[TestHook]
 
 
 @dataclass
