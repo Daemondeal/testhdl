@@ -1,0 +1,21 @@
+[project]
+name = "testhdl"
+version = "0.0.1"
+author = [
+    { name="Daem", email="daemondeal@gmail.com" },
+]
+description = "Build and run system for HDL"
+readme = "README.md"
+requires-python = ">= 3.9"
+license = "MIT"
+license-files = ["LICENCSE"]
+
+[project.urls]
+Homepage = "https://github.com/Daemondeal/testhdl"
+Issues = "https://github.com/Daemondeal/testhdl/issues"
+
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+
