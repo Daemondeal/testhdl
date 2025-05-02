@@ -29,7 +29,7 @@ class SourceList:
     defines: List[str]
     language: HardwareLanguage
     coverage_enabled: bool
-    incdir: Optional[str]
+    incdir: Optional[Path]
 
 
 @dataclass

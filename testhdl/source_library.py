@@ -20,8 +20,8 @@ class SourceLibrary:
         *paths: str,
         args: List[str] = [],
         defines: List[str] = [],
-        incdir: Optional[str] = None,
-        coverage_enabled: bool = False
+        incdir: Optional[str | Path] = None,
+        coverage_enabled: bool = False,
     ):
         """Adds a list of VHDL sources that will get compiled together.
 
@@ -46,11 +46,11 @@ class SourceLibrary:
 
     def add_verilog_sources(
         self,
-        *paths: str,
+        *paths: str | Path,
         args: List[str] = [],
         defines: List[str] = [],
-        incdir: Optional[str] = None,
-        coverage_enabled: bool = False
+        incdir: Optional[str | Path] = None,
+        coverage_enabled: bool = False,
     ):
         """Adds a list of Verilog sources that will get compiled together.
 
@@ -75,11 +75,11 @@ class SourceLibrary:
 
     def add_systemverilog_sources(
         self,
-        *paths: str,
+        *paths: str | Path,
         args: List[str] = [],
         defines: List[str] = [],
-        incdir: Optional[str] = None,
-        coverage_enabled: bool = False
+        incdir: Optional[str | Path] = None,
+        coverage_enabled: bool = False,
     ):
         """Adds a list of SystemVerilog sources that will get compiled together.
 
@@ -104,13 +104,13 @@ class SourceLibrary:
 
     def add_sources(
         self,
-        paths: List[str],
+        paths: List[str | Path],
         language: HardwareLanguage,
         *,
         args: List[str] = [],
         defines: List[str] = [],
-        incdir: Optional[str] = None,
-        coverage_enabled: bool = False
+        incdir: Optional[str | Path] = None,
+        coverage_enabled: bool = False,
     ):
         path_sources = []
         for path in paths:
@@ -128,6 +128,6 @@ class SourceLibrary:
                 defines=defines,
                 language=language,
                 coverage_enabled=coverage_enabled,
-                incdir=incdir,
+                incdir=Path(incdir),
             )
         )

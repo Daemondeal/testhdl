@@ -25,7 +25,7 @@ class TestRunError(Exception):
     message: str
     logs_file: Optional[Path]
 
-    def __init__(self, message, logs_file):
+    def __init__(self, message, logs_file=None):
         super().__init__(self, message)
         self.message = message
         self.logs_file = logs_file
