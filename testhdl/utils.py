@@ -3,7 +3,6 @@ from typing import List, Optional
 
 import re
 import sys
-import select
 import shutil
 import logging
 import subprocess

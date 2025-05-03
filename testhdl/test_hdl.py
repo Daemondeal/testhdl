@@ -7,6 +7,8 @@ import argparse
 
 from testhdl.hooks import TestHook
 from testhdl import utils
+from testhdl.linter_verilator import LinterVerilator
+from testhdl.linter_frontend import Linter
 from testhdl.logging import setup_logging
 from testhdl.models import RunAction, TestCase
 from testhdl.errors import SimulatorError, TestRunError, ValidationError
@@ -27,6 +29,10 @@ SUPPORTED_SIMULATORS = {
     "modelsim": SimulatorQuestaSim,
 }
 
+SUPPORTED_LINTERS = {
+    "verilator": LinterVerilator,
+}
+
 
 class TestHDL:
     workdir: Path
@@ -43,6 +49,8 @@ class TestHDL:
     runtime_run_args: List[str]
 
     additional_files: List[Path]
+
+    linters: List[Linter]
 
     coverage_enabled: bool
 
@@ -67,6 +75,7 @@ class TestHDL:
         self.compile_args = []
         self.runtime_args = []
         self.runtime_run_args = []
+        self.linters = []
 
         self.flags = [flag.lower() for flag in args.flag]
 
@@ -109,6 +118,12 @@ class TestHDL:
             "-c",
             "--compile-only",
             help="run only the compilation step",
+            action="store_true",
+        )
+
+        parser.add_argument(
+            "--lint",
+            help="run all linters",
             action="store_true",
         )
 
@@ -250,6 +265,23 @@ class TestHDL:
 
         self.additional_files.append(path_file)
 
+    def add_linter(self, linter_name: str) -> Linter:
+        """Add a linter
+
+        :param linter_name: the name of the linter to use. Read the docs for the list of supported linters
+        """
+
+        if linter_name not in SUPPORTED_LINTERS:
+            log.critical("Invalid linter %s", linter_name)
+            exit(-1)
+
+        linter_backend = SUPPORTED_LINTERS[linter_name](self.workdir, self.logsdir)
+        linter = Linter(linter=linter_backend, configs=[])
+
+        self.linters.append(linter)
+
+        return linter
+
     def add_test(
         self,
         test_name: str,
@@ -300,6 +332,8 @@ class TestHDL:
             action = RunAction.CLEAN
         elif self.args.compile_only:
             action = RunAction.COMPILE_ONLY
+        elif self.args.lint:
+            action = RunAction.LINT_ONLY
         elif self.args.all:
             action = RunAction.RUN_ALL
         elif self.args.test_name != "":
@@ -343,6 +377,7 @@ class TestHDL:
             test_to_run=test_to_run,
             tests=self.tests,
             seed=seed,
+            linters=self.linters,
             resolution=self.resolution,
             compile_args=self.compile_args,
             runtime_args=self.runtime_args,

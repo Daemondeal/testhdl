@@ -5,6 +5,7 @@ from typing import List, Optional
 from testhdl.source_library import SourceLibrary
 from testhdl.test_framework import TestFrameworkBase
 from testhdl.simulator_base import SimulatorBase
+from testhdl.linter_frontend import Linter
 from testhdl.models import TestCase
 
 
@@ -14,6 +15,8 @@ class RunConfig:
     path_logsdir: Path
 
     seed: int
+
+    linters: List[Linter]
 
     test_to_run: Optional[TestCase]
 

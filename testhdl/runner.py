@@ -29,6 +29,19 @@ class Runner:
         elapsed = time.perf_counter() - time_start_compile
         log.info("Compilation done; took %.2f seconds", elapsed)
 
+    def _lint(self):
+        log.info("Starting linting")
+        time_start_linting = time.perf_counter()
+
+        for linter in self.config.linters:
+            for config in linter.configs:
+                linter.linter.lint(self.config, config.library, config.top_entity)
+
+        elapsed = time.perf_counter() - time_start_linting
+        log.info("Linting done! Took %.2f seconds", elapsed)
+
+        pass
+
     def _run_test(self, test: TestCase):
         time_test_start = time.perf_counter()
         log.info("Running test %s", test.name)
@@ -133,6 +146,8 @@ class Runner:
         elif action == RunAction.COMPILE_ONLY:
             self._setup()
             self._compile()
+        elif action == RunAction.LINT_ONLY:
+            self._lint()
         if action == RunAction.SHOW_COVERAGE:
             self._show_coverage(self.config.test_to_run)
         elif action == RunAction.RUN_SINGLE_TEST:

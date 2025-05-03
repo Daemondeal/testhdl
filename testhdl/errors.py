@@ -1,8 +1,6 @@
 from pathlib import Path
 from typing import Optional
 
-from testhdl.models import TestCase
-
 
 class SimulatorError(Exception):
     message: str

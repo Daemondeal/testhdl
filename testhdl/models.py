@@ -16,10 +16,11 @@ class RunAction(Enum):
     LIST_TESTS = 0
     CLEAN = 1
     COMPILE_ONLY = 2
-    RUN_SINGLE_TEST = 3
-    RUN_ALL = 4
-    SHOW_WAVES = 5
-    SHOW_COVERAGE = 6
+    LINT_ONLY = 3
+    RUN_SINGLE_TEST = 4
+    RUN_ALL = 5
+    SHOW_WAVES = 6
+    SHOW_COVERAGE = 7
 
 
 @dataclass
