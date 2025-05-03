@@ -66,6 +66,9 @@ class Runner:
             "Test successful! Took %.2f seconds", test_elapsed, extra={"success": True}
         )
 
+        for test_hook in test.post_hooks:
+            test_hook.run_hook(self.config)
+
     def _run_all_tests(self):
         time_start = time.perf_counter()
 
