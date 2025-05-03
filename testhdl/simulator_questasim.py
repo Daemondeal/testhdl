@@ -147,6 +147,10 @@ class SimulatorQuestaSim(SimulatorBase):
         # so we advance the simulation just a little in order to log them in the waveform file.
         args += ["-do", f"run {config.resolution}"]
         if config.log_all_waves:
+            args += [
+                "-do",
+                "set WildcardFilter [lsearch -not -all -inline $WildcardFilter Memory]",
+            ]
             args += ["-do", "log -r /*"]
         args += config.runtime_run_args
 
