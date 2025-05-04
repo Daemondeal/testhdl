@@ -26,6 +26,7 @@ class RunConfig:
     runtime_args: List[str]
     runtime_run_args: List[str]
     log_all_waves: bool
+    wave_config_file: Path | None
 
     libraries: List[SourceLibrary]
     simulator: SimulatorBase

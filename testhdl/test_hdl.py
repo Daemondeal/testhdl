@@ -53,6 +53,7 @@ class TestHDL:
     linters: List[Linter]
 
     coverage_enabled: bool
+    wave_config_file: Path | None
 
     flags: List[str]
 
@@ -71,6 +72,8 @@ class TestHDL:
         self.coverage_enabled = False
         self.log_all_waves = False
         self.additional_files = []
+
+        self.wave_config_file = None
 
         self.compile_args = []
         self.runtime_args = []
@@ -162,6 +165,16 @@ class TestHDL:
     def set_log_all_waves(self):
         """Tell the simulator to log all waves during simulation"""
         self.log_all_waves = True
+
+    def set_wave_config_file(self, file: str | Path):
+        """Give the simulator a config file to show the waves
+
+        :param file: the wavefile"""
+
+        file = Path(file)
+        if not file.exists():
+            raise ValidationError(f"File {file.as_posix()} does not exist")
+        self.wave_config_file = file
 
     def set_resolution(self, resolution: str):
         """Set the resolution of the simulator. The default is 100ps
@@ -386,6 +399,7 @@ class TestHDL:
             libraries=self.libraries,
             simulator=simulator,
             test_framework=self.test_framework,
+            wave_config_file=self.wave_config_file,
             verbose=self.args.verbose,
             coverage_enabled=self.coverage_enabled,
             additional_files=self.additional_files,
