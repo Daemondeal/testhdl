@@ -128,6 +128,6 @@ class SourceLibrary:
                 defines=defines,
                 language=language,
                 coverage_enabled=coverage_enabled,
-                incdir=Path(incdir),
+                incdir=Path(incdir) if incdir else None,
             )
         )
