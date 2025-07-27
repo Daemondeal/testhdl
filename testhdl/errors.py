@@ -19,6 +19,10 @@ class ValidationError(Exception):
     pass
 
 
+class UnimplementedError(Exception):
+    pass
+
+
 class TestRunError(Exception):
     message: str
     logs_file: Optional[Path]

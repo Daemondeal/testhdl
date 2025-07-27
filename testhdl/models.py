@@ -19,8 +19,9 @@ class RunAction(Enum):
     LINT_ONLY = 3
     RUN_SINGLE_TEST = 4
     RUN_ALL = 5
-    SHOW_WAVES = 6
-    SHOW_COVERAGE = 7
+    DUMP_FILESETS = 6
+    SHOW_WAVES = 7
+    SHOW_COVERAGE = 8
 
 
 @dataclass

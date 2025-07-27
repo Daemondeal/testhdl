@@ -11,8 +11,14 @@ from testhdl.linter_verilator import LinterVerilator
 from testhdl.linter_frontend import Linter
 from testhdl.logging import setup_logging
 from testhdl.models import RunAction, TestCase
-from testhdl.errors import SimulatorError, TestRunError, ValidationError
+from testhdl.errors import (
+    SimulatorError,
+    TestRunError,
+    UnimplementedError,
+    ValidationError,
+)
 from testhdl.simulator_questasim import SimulatorQuestaSim
+from testhdl.simulator_vivado import SimulatorVivado
 from testhdl.source_library import SourceLibrary
 from testhdl.runner import Runner
 from testhdl.run_config import RunConfig
@@ -27,6 +33,7 @@ log = logging.getLogger("testhdl")
 SUPPORTED_SIMULATORS = {
     "questasim": SimulatorQuestaSim,
     "modelsim": SimulatorQuestaSim,
+    "vivado": SimulatorVivado,
 }
 
 SUPPORTED_LINTERS = {
@@ -127,6 +134,12 @@ class TestHDL:
         parser.add_argument(
             "--lint",
             help="run all linters",
+            action="store_true",
+        )
+
+        parser.add_argument(
+            "--dump-files",
+            help="dump all filesets to stdout",
             action="store_true",
         )
 
@@ -334,39 +347,15 @@ class TestHDL:
             if test.name == test_name:
                 return test
 
-    def run(self):
-        """Start the simulation"""
-
-        if self.args.coverage:
-            action = RunAction.SHOW_COVERAGE
-        elif self.args.show_waves:
-            action = RunAction.SHOW_WAVES
-        elif self.args.clean:
-            action = RunAction.CLEAN
-        elif self.args.compile_only:
-            action = RunAction.COMPILE_ONLY
-        elif self.args.lint:
-            action = RunAction.LINT_ONLY
-        elif self.args.all:
-            action = RunAction.RUN_ALL
-        elif self.args.test_name != "":
-            action = RunAction.RUN_SINGLE_TEST
-        else:
-            action = RunAction.LIST_TESTS
-
+    def _run_impl(self, action):
         test_to_run = None
-        try:
-            self._validate()
+        self._validate()
 
-            if action == RunAction.RUN_SINGLE_TEST or action == RunAction.SHOW_WAVES:
-                test_to_run = self._find_test(self.args.test_name)
+        if action == RunAction.RUN_SINGLE_TEST or action == RunAction.SHOW_WAVES:
+            test_to_run = self._find_test(self.args.test_name)
 
-                if test_to_run is None:
-                    raise ValidationError(f"Cannot find test {self.args.test_name}")
-
-        except ValidationError as e:
-            log.error("%s", e)
-            return
+            if test_to_run is None:
+                raise ValidationError(f"Cannot find test {self.args.test_name}")
 
         if self.args.seed is None:
             if self.default_seed is not None and not self.args.seed_random:
@@ -378,11 +367,7 @@ class TestHDL:
 
         simulator = SUPPORTED_SIMULATORS[self.simulator](self.workdir, self.logsdir)
 
-        try:
-            simulator.validate()
-        except ValidationError as e:
-            log.critical("Simulator error: %s", e)
-            return
+        simulator.validate()
 
         config = RunConfig(
             path_workdir=self.workdir,
@@ -406,17 +391,47 @@ class TestHDL:
         )
 
         runner = Runner(config)
+        runner.run(action)
+
+    def run(self):
+        """Start the simulation"""
+
+        if self.args.coverage:
+            action = RunAction.SHOW_COVERAGE
+        elif self.args.show_waves:
+            action = RunAction.SHOW_WAVES
+        elif self.args.clean:
+            action = RunAction.CLEAN
+        elif self.args.compile_only:
+            action = RunAction.COMPILE_ONLY
+        elif self.args.lint:
+            action = RunAction.LINT_ONLY
+        elif self.args.all:
+            action = RunAction.RUN_ALL
+        elif self.args.test_name != "":
+            action = RunAction.RUN_SINGLE_TEST
+        elif self.args.dump_files:
+            action = RunAction.DUMP_FILESETS
+        else:
+            action = RunAction.LIST_TESTS
 
         try:
-            runner.run(action)
+            self._run_impl(action)
+        except UnimplementedError as e:
+            log.critical("Unimplemented: %s", e)
+            exit(-1)
+        except ValidationError as e:
+            log.critical("Simulator error: %s", e)
+            exit(-1)
         except TestRunError as e:
             if not self.args.verbose and e.logs_file is not None:
                 utils.print_file(e.logs_file)
 
             log.error("%s", e.message)
-
+            exit(-1)
         except SimulatorError as e:
             if not self.args.verbose and e.logs_file is not None:
                 utils.print_file(e.logs_file)
 
             log.critical("%s", e.message)
+            exit(-1)

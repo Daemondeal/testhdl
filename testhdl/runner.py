@@ -1,3 +1,4 @@
+from os import RTLD_NODELETE
 from testhdl import utils
 from testhdl.errors import TestRunError, ValidationError
 from testhdl.models import RunAction, TestCase
@@ -138,6 +139,16 @@ class Runner:
         for test in self.config.tests:
             print(f" - {test.name}")
 
+    def _dump_filesets(self):
+        for library in self.config.libraries:
+            print(f"# Library {library.name}")
+
+            for source_list in library.source_lists:
+                print(f"## {source_list.language}")
+
+                for path in source_list.paths:
+                    print(path.absolute().as_posix())
+
     def run(self, action: RunAction):
         if action == RunAction.CLEAN:
             self._clean()
@@ -148,8 +159,10 @@ class Runner:
             self._compile()
         elif action == RunAction.LINT_ONLY:
             self._lint()
-        if action == RunAction.SHOW_COVERAGE:
+        elif action == RunAction.SHOW_COVERAGE:
             self._show_coverage(self.config.test_to_run)
+        elif action == RunAction.DUMP_FILESETS:
+            self._dump_filesets()
         elif action == RunAction.RUN_SINGLE_TEST:
             assert self.config.test_to_run is not None
             self._setup()
