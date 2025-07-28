@@ -103,7 +103,11 @@ class SimulatorQuestaSim(SimulatorBase):
 
         args = ["vsim", "-view", path_wavefile_rel]
 
-        if config.wave_config_file is not None:
+        if config.wave_config_file_generator is not None:
+            path_config = config.path_workdir / "wave_config.do"
+            config.wave_config_file_generator(path_wavefile, path_config)
+            args += ["-do", path_config.absolute().as_posix()]
+        elif config.wave_config_file is not None:
             args += ["-do", config.wave_config_file.as_posix()]
 
         rc = utils.run_program(args, cwd=self.workdir, echo=config.verbose)

@@ -1,4 +1,5 @@
 from typing import List, Optional
+from collections.abc import Callable
 from pathlib import Path
 
 import random
@@ -60,7 +61,9 @@ class TestHDL:
     linters: List[Linter]
 
     coverage_enabled: bool
+
     wave_config_file: Path | None
+    wave_config_file_generator: Callable[[Path, Path], None] | None
 
     flags: List[str]
 
@@ -81,6 +84,7 @@ class TestHDL:
         self.additional_files = []
 
         self.wave_config_file = None
+        self.wave_config_file_generator = None
 
         self.compile_args = []
         self.runtime_args = []
@@ -178,6 +182,19 @@ class TestHDL:
     def set_log_all_waves(self):
         """Tell the simulator to log all waves during simulation"""
         self.log_all_waves = True
+
+    def set_wave_config_file_generator(self, generator: Callable[[Path, Path], None]):
+        """Generate a config file to show waves.
+        This is mostly a workaround for gtkwave, if you want to use something
+        to generate the .gtkw file since the format is not meant to be written
+        by hand.
+
+        :param generator: the function to generate the wavefile. It gets as input
+                          the path to the VCD file and the path where to generate
+                          the resulting config file.
+        """
+
+        self.wave_config_file_generator = generator
 
     def set_wave_config_file(self, file: str | Path):
         """Give the simulator a config file to show the waves
@@ -385,6 +402,7 @@ class TestHDL:
             simulator=simulator,
             test_framework=self.test_framework,
             wave_config_file=self.wave_config_file,
+            wave_config_file_generator=self.wave_config_file_generator,
             verbose=self.args.verbose,
             coverage_enabled=self.coverage_enabled,
             additional_files=self.additional_files,

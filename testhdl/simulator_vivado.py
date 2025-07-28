@@ -78,8 +78,28 @@ class SimulatorVivado(SimulatorBase):
         log.info("Done! Took %.2f seconds", elapsed)
 
     def show_waves(self, path_logs: Path, config: RunConfig):
-        _ = path_logs, config
-        raise UnimplementedError("SimulatorVivado show_waves")
+        path_wavefile = path_logs / "wave.vcd"
+        if not path_wavefile.exists():
+            raise SimulatorError(
+                "Wavefile not found. Make sure you run the simulation first", None
+            )
+
+        path_config = path_logs / "wave.gtkw"
+
+        if config.wave_config_file_generator is not None:
+            config.wave_config_file_generator(path_wavefile, path_config)
+        elif config.wave_config_file is not None:
+            shutil.copy(config.wave_config_file, path_config)
+
+        args = [
+            "gtkwave",
+            path_wavefile.absolute().as_posix(),
+            path_config.absolute().as_posix()
+        ]
+        rc = utils.run_program(args, cwd=self.workdir, echo=config.verbose)
+
+        if rc != 0:
+            raise SimulatorError("Could not show waves", None)
 
     def run_simulation(
         self,
