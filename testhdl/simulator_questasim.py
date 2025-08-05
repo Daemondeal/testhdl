@@ -165,7 +165,8 @@ class SimulatorQuestaSim(SimulatorBase):
         args += ["-do", "run -all"]
         args += ["-do", "quit"]
 
-        rc = utils.run_program(args, self.workdir, path_simlogs, echo=config.verbose)
+        sim_echo = config.verbose_simulation or config.verbose_simulation
+        rc = utils.run_program(args, self.workdir, path_simlogs, echo=sim_echo)
 
         if rc != 0:
             raise SimulatorError(

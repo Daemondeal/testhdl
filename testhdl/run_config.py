@@ -27,6 +27,7 @@ class RunConfig:
     runtime_args: List[str]
     runtime_run_args: List[str]
     log_all_waves: bool
+    verbose_simulation: bool
 
     wave_config_file: Path | None
     wave_config_file_generator: Callable[[Path, Path], None] | None

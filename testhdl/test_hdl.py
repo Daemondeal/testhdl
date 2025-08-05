@@ -81,6 +81,7 @@ class TestHDL:
         self.default_seed = None
         self.coverage_enabled = False
         self.log_all_waves = False
+        self.verbose_simulation = True
         self.additional_files = []
 
         self.wave_config_file = None
@@ -178,6 +179,10 @@ class TestHDL:
         :param flag: the flag to check
         """
         return flag.lower() in self.flags
+
+    def set_verbose_simulation(self):
+        """Tell the simulator to show sim output even without --verbose flag"""
+        self.verbose_simulation = True
 
     def set_log_all_waves(self):
         """Tell the simulator to log all waves during simulation"""
@@ -398,6 +403,7 @@ class TestHDL:
             runtime_args=self.runtime_args,
             runtime_run_args=self.runtime_run_args,
             log_all_waves=self.log_all_waves,
+            verbose_simulation=self.verbose_simulation,
             libraries=self.libraries,
             simulator=simulator,
             test_framework=self.test_framework,
