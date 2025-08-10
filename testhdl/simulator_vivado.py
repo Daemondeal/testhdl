@@ -139,7 +139,7 @@ class SimulatorVivado(SimulatorBase):
         with open(path_simscript, "w") as simscript:
             simscript.write(f"open_vcd {path_wavefile}\n")
             simscript.write(f"log_vcd *\n")
-            simscript.write(f"log_wave -r /*\n")
+            simscript.write(f"log_wave -recursive *\n")
 
             for argument in config.runtime_run_args:
                 simscript.write(f"{argument}\n")
