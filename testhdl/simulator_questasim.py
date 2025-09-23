@@ -57,6 +57,9 @@ class SimulatorQuestaSim(SimulatorBase):
             if source_list.coverage_enabled:
                 args += ["-coveropt", "3", "+cover", "-coverexcludedefault"]
 
+            if source_list.language == HardwareLanguage.SYSTEMVERILOG:
+                args += ["-suppress", "13314"]
+
             if program == "vcom":
                 args.append("-2008")
                 args.append("-mixedsvvh")
