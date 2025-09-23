@@ -231,7 +231,7 @@ class TestHDL:
         """Enables coverage collection"""
         self.coverage_enabled = True
 
-    def set_workdir(self, workdir: str):
+    def set_workdir(self, workdir: str | Path):
         """Set the directory where the simulator will get called. Defaults to 'build'
 
         :param workdir: path to the directory
