@@ -13,7 +13,6 @@ import time
 import shutil
 import logging
 
-# log = logging.getLogger("testhdl.questasim")
 log = logging.getLogger("questasim")
 
 
@@ -95,7 +94,6 @@ class SimulatorQuestaSim(SimulatorBase):
         path_logs: Path,
         config: RunConfig,
     ):
-
         path_wavefile = path_logs / "wave.wlf"
         path_wavefile_rel = os.path.relpath(path_logs / "wave.wlf", self.workdir)
 
